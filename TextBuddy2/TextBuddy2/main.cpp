@@ -10,6 +10,7 @@ using namespace std;
 //main function takes in a string of the file name in the form of argv[1].
 //this name is passed to TextBuddy::main function for opening of the file.
 void main(int argc, char* argv[]) {
+
 	string filename(argv[1]);
 	TextBuddy::main(filename);
 	return;
