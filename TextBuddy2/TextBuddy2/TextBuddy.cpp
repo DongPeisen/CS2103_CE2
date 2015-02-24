@@ -10,12 +10,15 @@ const string TextBuddy::MESSAGE_WELCOME = "Welcome to TextBuddy. %s is ready for
 const string TextBuddy::MESSAGE_ADD = "added to %s: \"%s\"";
 const string TextBuddy::MESSAGE_DELETE = "deleted from %s: \"%s\"";
 const string TextBuddy::MESSAGE_CLEAR = "all content deleted from %s";
+const string TextBuddy::MESSAGE_SEARCH_NO_RESULT = "there is no line in %s containing the word %s";
+const string TextBuddy::MESSAGE_SORT = "all content in %s sorted alphabetically";
 const string TextBuddy::MESSAGE_EMPTY = "%s is empty";
 const string TextBuddy::MESSAGE_INVALID = "Invalid command";
 
 list<string> TextBuddy::textList;
 string TextBuddy::fileName;
 char TextBuddy::buffer[255];
+int TextBuddy::searchResult;
 bool TextBuddy::userExit;
 ofstream TextBuddy::outFile;
 
@@ -81,6 +84,11 @@ string TextBuddy::executeCommand(string firstWord) {
 			return deleteText(textNumber);
 		case CLEAR:
 			return clearText();
+		case SEARCH:
+			getline(cin, restOfCommand);
+			return searchText(restOfCommand);
+		case SORT:
+			return sortText();
 		case DISPLAY: 
 			return displayText();
 		case EXIT:
@@ -90,11 +98,6 @@ string TextBuddy::executeCommand(string firstWord) {
 		default:
 			return MESSAGE_INVALID;
 	}
-}
-
-//to check if textList is empty.
-bool TextBuddy::isEmpty() {
-	return textList.empty();
 }
 
 //to add a new line of content to the back of textList.
@@ -138,6 +141,32 @@ string TextBuddy::clearText() {
 	return buffer;
 }
 
+//to search for all content containing a certain keyword.
+string TextBuddy::searchText(string keyword) {	
+	if(isEmpty()) {
+		sprintf_s(buffer, MESSAGE_EMPTY.c_str(), fileName.c_str());
+		return buffer;
+	}
+
+	return searchingProcess(keyword);
+}
+
+//to sort all content in alphabetical order.
+string TextBuddy::sortText() {
+	
+	if(isEmpty()) {
+		sprintf_s(buffer, MESSAGE_EMPTY.c_str(), fileName.c_str());
+		return buffer;
+	}
+
+	/*
+	radix sort?
+	*/
+
+	sprintf_s(buffer, MESSAGE_SORT.c_str(), fileName.c_str());
+	return buffer;
+}
+
 //to display all content. The actual arrangement and processing of content is done by toString() function.
 string TextBuddy::displayText() {
 	if(isEmpty()) {
@@ -145,6 +174,32 @@ string TextBuddy::displayText() {
 		return buffer;
 	}
 	return toString();
+}
+
+//to check if textList is empty.
+bool TextBuddy::isEmpty() {
+	return textList.empty();
+}
+
+//the actual searching process through textList when it is not empty.
+string TextBuddy::searchingProcess(string keyword) {
+	searchResult = 0;
+	
+	ostringstream out;
+	list<string>::iterator iter = textList.begin();
+	while(iter != textList.end()) {
+		size_t found = (*iter).find(keyword);
+		if(found != string::npos) {
+			out << ++searchResult << ". " << *iter << endl;
+		}
+		iter++;
+	}
+
+	if(searchResult != 0) {
+		return out.str();
+	}
+	sprintf_s(buffer, MESSAGE_SEARCH_NO_RESULT.c_str(), fileName.c_str(), keyword.c_str());
+	return buffer;
 }
 
 //to return all content in textList as a stringstream.
@@ -177,4 +232,11 @@ string TextBuddy::exitProgramme() {
 	userExit = true;
 	string empty;
 	return empty;
+}
+
+
+//function below is used only in unit testing
+void TextBuddy::addTextForTest(string text) {
+	textList.push_back(text);
+	return;
 }
