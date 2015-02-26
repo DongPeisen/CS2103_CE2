@@ -7,31 +7,31 @@ namespace TextBuddyTest {
 	TEST_CLASS(TextBuddyTest) {
 	public:
 		
-		TEST_METHOD(TestDisplayText) {
+		TEST_METHOD(TestSearchText) {
 			TextBuddy* tb = new TextBuddy;
-			tb->addTextForTest("test case 1");
-			tb->addTextForTest("test case 2");
-			tb->addTextForTest("test case 3");
-			string expectedDisplay = "1. test case 1\n2. test case 2\n3. test case 3\n\n";
-			Assert::AreEqual(expectedDisplay, tb->displayText());
+
+			tb->addTextForTest("brown fox");
+			tb->addTextForTest("red fox");
+			tb->addTextForTest("white wolf");
+			tb->addTextForTest("blue fox");
+
+			string expectedDisplay1 = "1. brown fox\n2. red fox\n3. blue fox\n";
+			string expectedDisplay2 = "1. white wolf\n";
+			Assert::AreEqual(expectedDisplay1, tb->searchText("fox"));
+			Assert::AreEqual(expectedDisplay2, tb->searchText("wolf"));
 		}
 
-		TEST_METHOD(TestAddText) {
-/*			TextBuddy* tb = new TextBuddy;
-			
-			string actual1 = tb->addText("test test test 1");
-			string actual2 = tb->addText("test test test 2");
-			string expected1 = "added to mytextfile.txt: \"test test test 1\"";
-			string expected2 = "added to mytextfile.txt: \"test test test 2\"";
-			string expectedDisplay = "1. test test test 1\n2. test test test 2\n\n";
-			
-			Assert::AreEqual(expected1, actual1);
-			Assert::AreEqual(expected2, actual2);
-			Assert::AreEqual(expectedDisplay, tb->displayText());
-*/		}
+		TEST_METHOD(TestSortText) {
+			TextBuddy* tb = new TextBuddy;
 
-		TEST_METHOD(TestDeleteText) {
-			//add, display required
+			tb->addTextForTest("ab");
+			tb->addTextForTest("aa");
+			tb->addTextForTest("bb");
+			tb->addTextForTest("ba");
+
+			string returnValue = tb->sortText();
+			string expectedDisplay = "1. aa\n2. ab\n3. ba\n4. bb\n";
+			Assert::AreEqual(expectedDisplay, tb->displayText());
 		}
 	};
 }

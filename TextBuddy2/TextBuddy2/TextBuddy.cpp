@@ -18,10 +18,12 @@ const string TextBuddy::MESSAGE_INVALID = "Invalid command";
 list<string> TextBuddy::textList;
 string TextBuddy::fileName;
 char TextBuddy::buffer[255];
-int TextBuddy::searchResult;
 bool TextBuddy::userExit;
 ofstream TextBuddy::outFile;
 
+
+
+/*********highest level of abstraction*********/
 void TextBuddy::main(string filename) {
 	fileName = filename;
 	sprintf_s(buffer, MESSAGE_WELCOME.c_str(), fileName.c_str());
@@ -30,10 +32,9 @@ void TextBuddy::main(string filename) {
 	userExit = false;
 	string firstWord;
 	string feedback;
-
 	while(!userExit) {
 		cout << "command: ";		
-		cin >> firstWord;	//only first word because it is used to determine which kind of executions will be done.
+		cin >> firstWord;	//first word of command is used to determine which kind of executions will be done.
 		feedback = executeCommand(firstWord);
 		showToUser(feedback);
 	}
@@ -43,27 +44,24 @@ void TextBuddy::main(string filename) {
 	return;
 }
 
+
+
+/*********second level of abstraction*********/
+
+//to print the feedback message shown to user
 void TextBuddy::showToUser(string text) {
 	cout << text << endl;
 }
 
-//to decipher the user command by converting it to the corresponding COMMAND_TYPE.
-TextBuddy::COMMAND_TYPE TextBuddy::determineCommandType(string commandString) {
-	if(commandString == "add") {
-		return TextBuddy::ADD;
-	} else if (commandString == "delete") {
-		return TextBuddy::DELETE;
-	} else if (commandString == "display") {
-		return TextBuddy::DISPLAY;
-	} else if (commandString == "clear") {
-		return TextBuddy::CLEAR;
-	} else if (commandString == "exit") {
-		return TextBuddy::EXIT;
-	} else if (commandString == "search") {
-		return TextBuddy::SEARCH;
-	} else if (commandString == "sort") {
-		return TextBuddy::SORT;
-	} else return TextBuddy::INVALID;
+//to write all content from textList into a file.
+void TextBuddy::textToFile() {
+	if(isEmpty()) {
+		outFile.close();
+		return;
+	}
+	outFile << displayTextProcess();
+	outFile.close();
+	return;
 }
 
 //to execute the user commands by making required changes to textList through respective functions.
@@ -100,25 +98,120 @@ string TextBuddy::executeCommand(string firstWord) {
 	}
 }
 
+
+
+/*********third level of abstraction*********/
+
+//to decipher the user command by converting it to the corresponding COMMAND_TYPE.
+TextBuddy::COMMAND_TYPE TextBuddy::determineCommandType(string commandString) {
+	if(commandString == "add") {
+		return TextBuddy::ADD;
+	} else if (commandString == "delete") {
+		return TextBuddy::DELETE;
+	} else if (commandString == "display") {
+		return TextBuddy::DISPLAY;
+	} else if (commandString == "clear") {
+		return TextBuddy::CLEAR;
+	} else if (commandString == "exit") {
+		return TextBuddy::EXIT;
+	} else if (commandString == "search") {
+		return TextBuddy::SEARCH;
+	} else if (commandString == "sort") {
+		return TextBuddy::SORT;
+	} else return TextBuddy::INVALID;
+}
+
 //to add a new line of content to the back of textList.
 string TextBuddy::addText(string text) {
+	return addTextProcess(text);
+}
+
+//to delete a line based on the number of the line.
+string TextBuddy::deleteText(int textNumber) {
+	if(isEmpty()) {
+		return bufferEmptyProcess();
+	}
+	if(textNumber==0 || textNumber<0 || textNumber>int(textList.size())) {
+		return bufferInvalidProcess();
+	}
+
+	return deleteTextProcess(textNumber);
+}
+
+//to delete all content in textList.
+string TextBuddy::clearText() {
+	if(isEmpty()) {
+		return bufferEmptyProcess();
+	}
+
+	return clearTextProcess();
+}
+
+//to search for all content containing a certain keyword.
+string TextBuddy::searchText(string keyword) {	
+	if(isEmpty()) {
+		return bufferEmptyProcess();
+	}
+
+	return searchTextProcess(keyword);
+}
+
+//to sort all content in alphabetical order.
+string TextBuddy::sortText() {
+	if(isEmpty()) {
+		return bufferEmptyProcess();
+	}
+	
+	return sortTextProcess();
+}
+
+//to display all content. The actual arrangement and processing of content is done by toString() function.
+string TextBuddy::displayText() {
+	if(isEmpty()) {
+		return bufferEmptyProcess();
+	}
+
+	return displayTextProcess();
+}
+
+//to exit the programme by turning userExit to true so that the while loop in TextBuddy::main() function terminates.
+//exitProgramme() function has a string return type because executeCommand() function must return a string.
+string TextBuddy::exitProgramme() {
+	userExit = true;
+	string empty;
+	return empty;
+}
+
+
+
+/*********lowerest level of abstraction*********/
+
+//to check if textList is empty.
+bool TextBuddy::isEmpty() {
+	return textList.empty();
+}
+
+//message for an empty textList.
+string TextBuddy::bufferEmptyProcess() {
+	sprintf_s(buffer, MESSAGE_EMPTY.c_str(), fileName.c_str());
+	return buffer;
+}
+
+//message for an invalid user command.
+string TextBuddy::bufferInvalidProcess() {
+	sprintf_s(buffer, MESSAGE_INVALID.c_str());
+	return buffer;
+}
+
+//the actual text-adding process.
+string TextBuddy::addTextProcess(string text) {
 	textList.push_back(text);
 	sprintf_s(buffer, MESSAGE_ADD.c_str(), fileName.c_str(), text.c_str());
 	return buffer;
 }
 
-//to delete a line based on the number of the line.
-string TextBuddy::deleteText(int textNumber) {
-	if(textNumber==0 || textNumber<0 || textNumber>textList.size()) {
-		sprintf_s(buffer, MESSAGE_INVALID.c_str());
-		return buffer;
-	}
-
-	if(isEmpty()) {
-		sprintf_s(buffer, MESSAGE_EMPTY.c_str(), fileName.c_str());
-		return buffer;
-	}
-
+//the actual text-deleting process when the list is not empty and the user command is valid.
+string TextBuddy::deleteTextProcess(int textNumber) {
 	list<string>::iterator iter = textList.begin();
 	for(int i=1; i<textNumber; ++i) {
 		iter++;
@@ -129,61 +222,16 @@ string TextBuddy::deleteText(int textNumber) {
 	return buffer;
 }
 
-//to delete all content in textList.
-string TextBuddy::clearText() {
-	if(isEmpty()) {
-		sprintf_s(buffer, MESSAGE_EMPTY.c_str(), fileName.c_str());
-		return buffer;
-	}
-
+//the actual list-clearing process when it is not empty.
+string TextBuddy::clearTextProcess() {
 	textList.clear();
 	sprintf_s(buffer, MESSAGE_CLEAR.c_str(), fileName.c_str());
 	return buffer;
 }
 
-//to search for all content containing a certain keyword.
-string TextBuddy::searchText(string keyword) {	
-	if(isEmpty()) {
-		sprintf_s(buffer, MESSAGE_EMPTY.c_str(), fileName.c_str());
-		return buffer;
-	}
-
-	return searchingProcess(keyword);
-}
-
-//to sort all content in alphabetical order.
-string TextBuddy::sortText() {
-	
-	if(isEmpty()) {
-		sprintf_s(buffer, MESSAGE_EMPTY.c_str(), fileName.c_str());
-		return buffer;
-	}
-
-	/*
-	radix sort?
-	*/
-
-	sprintf_s(buffer, MESSAGE_SORT.c_str(), fileName.c_str());
-	return buffer;
-}
-
-//to display all content. The actual arrangement and processing of content is done by toString() function.
-string TextBuddy::displayText() {
-	if(isEmpty()) {
-		sprintf_s(buffer, MESSAGE_EMPTY.c_str(), fileName.c_str());
-		return buffer;
-	}
-	return toString();
-}
-
-//to check if textList is empty.
-bool TextBuddy::isEmpty() {
-	return textList.empty();
-}
-
-//the actual searching process through textList when it is not empty.
-string TextBuddy::searchingProcess(string keyword) {
-	searchResult = 0;
+//the actual list searching process when it is not empty.
+string TextBuddy::searchTextProcess(string keyword) {
+	int searchResult = 0;
 	
 	ostringstream out;
 	list<string>::iterator iter = textList.begin();
@@ -202,9 +250,15 @@ string TextBuddy::searchingProcess(string keyword) {
 	return buffer;
 }
 
-//to return all content in textList as a stringstream.
-string TextBuddy::toString() {
+////the actual list sorting process when it is not empty.
+string TextBuddy::sortTextProcess() {
+	textList.sort();
+	sprintf_s(buffer, MESSAGE_SORT.c_str(), fileName.c_str());
+	return buffer;
+}
 
+//to return all content in textList as a stringstream.
+string TextBuddy::displayTextProcess() {
 	int Number = 1;
 	ostringstream oss; 
 	list<string>::iterator iter = textList.begin();
@@ -213,30 +267,4 @@ string TextBuddy::toString() {
 		iter++;
 	}
 	return oss.str();
-}
-
-//to write content from textList into a file.
-void TextBuddy::textToFile() {
-	if(isEmpty()) {
-		outFile.close();
-		return;
-	}
-	outFile << toString();
-	outFile.close();
-	return;
-}
-
-//to exit the programme by turning userExit to true so that the while loop in TextBuddy::main() function terminates.
-//exitProgramme() function has a string return type because executeCommand() function must return a string.
-string TextBuddy::exitProgramme() {
-	userExit = true;
-	string empty;
-	return empty;
-}
-
-
-//function below is used only in unit testing
-void TextBuddy::addTextForTest(string text) {
-	textList.push_back(text);
-	return;
 }
